@@ -1,0 +1,12 @@
+# Common
+.DS_Store
+Thumbs.db
+node_modules/
+dist/
+.env
+*.log
+
+# Workspace
+.vscode/
+.idea/
+.gemini/
