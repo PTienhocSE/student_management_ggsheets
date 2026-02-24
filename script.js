@@ -64,6 +64,11 @@ async function syncData() {
       if (document.getElementById("vice-monitor-vn-name-card"))
         document.getElementById("vice-monitor-vn-name-card").innerText =
           config.viceMonitorVN || "Đang cập nhật...";
+
+      // Cập nhật niên khóa/năm học
+      if (document.getElementById("school-year"))
+        document.getElementById("school-year").innerText =
+          config.schoolYear || "Niên khóa 2024 - 2025";
     }
 
     // 2. Hệ thống thông báo (Notifications)
@@ -285,8 +290,9 @@ function renderFinance() {
   let tout = 0;
 
   transactions.forEach((tr) => {
-    if (tr.type === "thu") tin += tr.amount;
-    else tout += tr.amount;
+    const typeNormalized = (tr.type || "").toString().toLowerCase().trim();
+    if (typeNormalized === "thu") tin += Math.abs(tr.amount);
+    else tout += Math.abs(tr.amount);
   });
 
   const incomeEl = document.getElementById("total-income");
@@ -303,14 +309,15 @@ function renderFinance() {
     .slice(0, 5);
 
   latest5.forEach((tr) => {
-    const isThu = tr.type === "thu";
+    const typeNormalized = (tr.type || "").toString().toLowerCase().trim();
+    const isThu = typeNormalized === "thu";
     const d = tr.date ? new Date(tr.date).toLocaleDateString("vi-VN") : "--";
     history.innerHTML += `
       <tr class="border-b border-white/5 py-4">
         <td class="py-4 text-gray-400 font-bold">${d}</td>
         <td class="py-4 font-medium">${tr.content}</td>
-        <td class="py-4"><span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase ${isThu ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}">${tr.type}</span></td>
-        <td class="py-4 font-bold ${isThu ? "text-green-400" : "text-red-400"}">${isThu ? "+" : "-"}${tr.amount.toLocaleString()}</td>
+        <td class="py-4"><span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase ${isThu ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}">${isThu ? "THU" : "CHI"}</span></td>
+        <td class="py-4 font-bold ${isThu ? "text-green-400" : "text-red-400"}">${isThu ? "+" : "-"}${Math.abs(tr.amount).toLocaleString()}đ</td>
         <td class="py-4"><span class="material-symbols-outlined text-green-500 text-sm">verified</span></td>
       </tr>`;
   });
@@ -385,14 +392,15 @@ function renderFullFinance() {
       ? ""
       : '<tr><td colspan="5" class="py-20 text-center text-gray-500">Không tìm thấy giao dịch nào</td></tr>';
   pageItems.forEach((tr) => {
-    const isThu = tr.type === "thu";
+    const typeNormalized = (tr.type || "").toString().toLowerCase().trim();
+    const isThu = typeNormalized === "thu";
     const d = tr.date ? new Date(tr.date).toLocaleDateString("vi-VN") : "--";
     tbody.innerHTML += `
       <tr class="border-b border-white/5 hover:bg-white/5 transition">
         <td class="py-4 font-bold text-gray-400">${d}</td>
         <td class="py-4">${tr.content}</td>
-        <td class="py-4"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${isThu ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}">${tr.type}</span></td>
-        <td class="py-4 font-bold ${isThu ? "text-green-400" : "text-red-400"}">${isThu ? "+" : "-"}${tr.amount.toLocaleString()}đ</td>
+        <td class="py-4"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${isThu ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}">${isThu ? "THU" : "CHI"}</span></td>
+        <td class="py-4 font-bold ${isThu ? "text-green-400" : "text-red-400"}">${isThu ? "+" : "-"}${Math.abs(tr.amount).toLocaleString()}đ</td>
         <td class="py-4"><span class="material-symbols-outlined text-green-500 text-xs">verified</span></td>
       </tr>`;
   });
@@ -416,21 +424,94 @@ function changeFinancePage(p) {
  * CÁC HÀM RENDER DỮ LIỆU KHÁC (MEDIA, SCHEDULE, EXAMS, ETC.)
  */
 
-// Vẽ bộ sưu tập ảnh hoạt động
+// Vẽ bộ sưu tập ảnh hoạt động (hiển thị 3 ảnh, ảnh cuối +X more)
+let allMediaItems = [];
+
 function renderMedia(list) {
+  allMediaItems = list;
   const grid = document.getElementById("media-grid");
   if (!grid) return;
   grid.innerHTML = "";
-  list.forEach((item, i) => {
+  
+  const displayCount = Math.min(3, list.length);
+  const remainingCount = list.length - 3;
+  
+  for (let i = 0; i < displayCount; i++) {
+    const item = list[i];
+    const isLast = i === 2 && remainingCount > 0;
+    
     grid.innerHTML += `
-      <div class="bento-item ${i === 0 ? "bento-main" : ""} group overflow-hidden relative rounded-[32px]">
-        <img src="${item.image_url}" class="w-full h-full object-cover transition duration-700 group-hover:scale-110">
-        <div class="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
+      <div class="media-item ${i === 0 ? "media-main" : ""} group overflow-hidden relative rounded-[32px] cursor-pointer" onclick="openLightbox(${i})">
+        <img src="${item.image_url}" alt="${item.title}" class="w-full h-full object-cover transition duration-700 group-hover:scale-110">
+        ${isLast ? `
+        <div class="absolute inset-0 bg-black/50"></div>
+        <div class="absolute inset-0 flex flex-col items-center justify-center">
+          <span class="text-white text-5xl font-black mb-1">+${remainingCount}</span>
+          <span class="text-white font-bold text-sm uppercase tracking-wider opacity-80">Xem thêm</span>
+        </div>
+        ` : `
+        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+        <div class="absolute inset-x-0 bottom-0 p-6">
           <h4 class="text-white font-bold text-lg">${item.title}</h4>
         </div>
+        `}
       </div>`;
-  });
+  }
 }
+
+// Lightbox functions
+let currentLightboxIndex = 0;
+
+function openLightbox(index) {
+  currentLightboxIndex = index;
+  const lightbox = document.getElementById("media-lightbox");
+  if (!lightbox) return;
+  
+  renderLightboxContent();
+  lightbox.classList.add("show");
+  document.body.style.overflow = "hidden";
+}
+
+function closeLightbox(e) {
+  if (e && !e.target.closest('.lightbox-close') && !e.target.classList.contains('lightbox-overlay')) return;
+  const lightbox = document.getElementById("media-lightbox");
+  if (lightbox) {
+    lightbox.classList.remove("show");
+    document.body.style.overflow = "";
+  }
+}
+
+function renderLightboxContent() {
+  const container = document.getElementById("lightbox-content");
+  const counter = document.getElementById("lightbox-counter");
+  const title = document.getElementById("lightbox-title");
+  if (!container || !allMediaItems.length) return;
+  
+  const item = allMediaItems[currentLightboxIndex];
+  container.innerHTML = `<img src="${item.image_url}" alt="${item.title}" class="max-h-[80vh] max-w-full object-contain rounded-2xl shadow-2xl">`;
+  if (counter) counter.textContent = `${currentLightboxIndex + 1} / ${allMediaItems.length}`;
+  if (title) title.textContent = item.title;
+}
+
+function prevLightbox() {
+  currentLightboxIndex = (currentLightboxIndex - 1 + allMediaItems.length) % allMediaItems.length;
+  renderLightboxContent();
+}
+
+function nextLightbox() {
+  currentLightboxIndex = (currentLightboxIndex + 1) % allMediaItems.length;
+  renderLightboxContent();
+}
+
+// Keyboard navigation for lightbox
+document.addEventListener('keydown', (e) => {
+  const lightbox = document.getElementById("media-lightbox");
+  if (!lightbox || !lightbox.classList.contains("show")) return;
+  
+  if (e.key === 'ArrowLeft') prevLightbox();
+  else if (e.key === 'ArrowRight') nextLightbox();
+  else if (e.key === 'Escape') closeLightbox({ target: { classList: { contains: () => true } } });
+});
 
 // Vẽ thời khóa biểu
 function renderSchedule(schedule) {
@@ -474,26 +555,140 @@ function renderExams(exams) {
   });
 }
 
-// Vẽ biểu đồ thi đua các tổ
+// Vẽ biểu đồ thi đua các tổ và học sinh (TÁCH RIÊNG)
+let allEmulationData = [];
+let currentEmulationGroup = 'all';
+
 function renderEmulation(groups) {
-  const container = document.getElementById("emulation-list");
+  allEmulationData = groups;
+  
+  // Tách dữ liệu: Tổ và Học sinh
+  const groupData = groups.filter(g => g.groupName && g.groupName.toLowerCase().startsWith('tổ'));
+  const studentData = groups.filter(g => g.groupName && !g.groupName.toLowerCase().startsWith('tổ'));
+  
+  // Render phần Tổ
+  const groupContainer = document.getElementById("emulation-groups");
+  if (groupContainer) {
+    groupContainer.innerHTML = "";
+    const colors = ["orange", "blue", "green", "purple"];
+    groupData.forEach((g, i) => {
+      const color = colors[i % colors.length];
+      const percent = Math.min(100, g.score || 0);
+      groupContainer.innerHTML += `
+        <div>
+          <div class="flex justify-between items-end mb-4">
+            <p class="text-xl font-black">${g.groupName}</p>
+            <p class="text-4xl font-black text-${color}-400 tracking-tighter">${g.score}<span class="text-xs uppercase ml-1">đ</span></p>
+          </div>
+          <div class="h-4 w-full bg-white/10 rounded-full overflow-hidden">
+            <div class="h-full bg-${color}-400 rounded-full transition-all duration-1000" style="width: ${percent}%"></div>
+          </div>
+        </div>`;
+    });
+  }
+  
+  // Render phần Học sinh
+  renderEmulationStudents(studentData);
+}
+
+// Render danh sách học sinh thi đua
+function renderEmulationStudents(students) {
+  const container = document.getElementById("emulation-students");
   if (!container) return;
+  
   container.innerHTML = "";
-  const colors = ["orange", "blue", "green", "purple"];
-  groups.forEach((g, i) => {
-    const color = colors[i % colors.length];
-    const percent = Math.min(100, g.score || 0);
+  
+  if (students.length === 0) {
+    container.innerHTML = '<p class="col-span-full text-center text-gray-400 py-8">Không có dữ liệu</p>';
+    return;
+  }
+  
+  students.forEach((s) => {
+    const score = s.score || 0;
+    let colorClass = 'bg-green-100 text-green-600 border-green-200';
+    let barColor = 'bg-green-500';
+    let statusText = 'Tốt';
+    
+    if (score < 80) {
+      colorClass = 'bg-red-100 text-red-600 border-red-200';
+      barColor = 'bg-red-500';
+      statusText = 'Cần cải thiện';
+    } else if (score < 90) {
+      colorClass = 'bg-amber-100 text-amber-600 border-amber-200';
+      barColor = 'bg-amber-500';
+      statusText = 'Trung bình';
+    }
+    
+    const percent = Math.min(100, score);
+    const description = s.description ? `<p class="text-xs text-gray-400 mt-1 truncate" title="${s.description}">${s.description}</p>` : '';
+    
     container.innerHTML += `
-      <div>
-        <div class="flex justify-between items-end mb-4">
-          <p class="text-xl font-black">${g.groupName}</p>
-          <p class="text-4xl font-black text-${color}-400 tracking-tighter">${g.score}<span class="text-xs uppercase ml-1">đ</span></p>
+      <div class="bg-white p-4 rounded-2xl border border-gray-100 hover:shadow-md transition-all">
+        <div class="flex justify-between items-start mb-2">
+          <div class="flex-1 min-w-0">
+            <p class="font-bold text-gray-800 truncate">${s.groupName}</p>
+            ${description}
+          </div>
+          <span class="text-lg font-black ${score >= 90 ? 'text-green-500' : score >= 80 ? 'text-amber-500' : 'text-red-500'}">${score}</span>
         </div>
-        <div class="h-4 w-full bg-white/10 rounded-full overflow-hidden">
-          <div class="h-full bg-${color}-400 rounded-full" style="width: ${percent}%"></div>
+        <div class="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+          <div class="h-full ${barColor} rounded-full transition-all duration-700" style="width: ${percent}%"></div>
+        </div>
+        <div class="flex justify-between items-center mt-2">
+          <span class="text-[10px] font-bold ${colorClass} px-2 py-0.5 rounded-full">${statusText}</span>
         </div>
       </div>`;
   });
+}
+
+// Lọc học sinh theo tổ
+function filterEmulationByGroup(group) {
+  currentEmulationGroup = group;
+  
+  // Cập nhật trạng thái tabs
+  document.querySelectorAll('.emulation-tab').forEach(tab => {
+    tab.classList.remove('active', 'bg-[#003a7a]', 'text-white');
+    tab.classList.add('bg-gray-200', 'text-gray-600');
+  });
+  const activeTab = document.querySelector(`.emulation-tab[data-group="${group}"]`);
+  if (activeTab) {
+    activeTab.classList.add('active', 'bg-[#003a7a]', 'text-white');
+    activeTab.classList.remove('bg-gray-200', 'text-gray-600');
+  }
+  
+  filterEmulationStudents();
+}
+
+// Lọc và tìm kiếm học sinh
+function filterEmulationStudents() {
+  const searchTerm = document.getElementById('emulation-search')?.value.toLowerCase() || '';
+  const filterValue = document.getElementById('emulation-filter')?.value || 'all';
+  
+  // Lấy dữ liệu học sinh (không phải tổ)
+  let students = allEmulationData.filter(g => g.groupName && !g.groupName.toLowerCase().startsWith('tổ'));
+  
+  // Lọc theo tổ (dựa vào thứ tự trong danh sách gốc)
+  if (currentEmulationGroup !== 'all') {
+    const groupIndex = parseInt(currentEmulationGroup.replace('to', '')) - 1;
+    const studentsPerGroup = Math.ceil(students.length / 4);
+    const start = groupIndex * studentsPerGroup;
+    const end = start + studentsPerGroup;
+    students = students.slice(start, end);
+  }
+  
+  // Lọc theo tên
+  if (searchTerm) {
+    students = students.filter(s => s.groupName.toLowerCase().includes(searchTerm));
+  }
+  
+  // Lọc theo điểm
+  if (filterValue === 'good') {
+    students = students.filter(s => s.score >= 90);
+  } else if (filterValue === 'warning') {
+    students = students.filter(s => s.score < 90);
+  }
+  
+  renderEmulationStudents(students);
 }
 
 // Vẽ danh sách To-do list (công việc cần làm)
@@ -587,16 +782,116 @@ function applyZoom() {
 /**
  * TRỢ LÝ AI (DEMO)
  */
+const aiResponses = {
+  budget: `### 📊 Kế Hoạch Thu Chi Quý II/2026
+
+#### 💰 DỰ KIẾN THU
+| Hạng mục | Số tiền | Ghi chú |
+|----------|---------|---------|
+| Quỹ lớp tháng 3-5 | 3.000.000đ | 40 HS x 25.000đ x 3 tháng |
+| Đóng góp tự nguyện | 500.000đ | Phụ huynh hỗ trợ |
+| **Tổng thu** | **3.500.000đ** | |
+
+#### 💸 DỰ KIẾN CHI
+| Hạng mục | Số tiền | Ưu tiên |
+|----------|---------|---------|
+| Nước uống hàng tuần | 600.000đ | ⭐⭐⭐ |
+| Quà sinh nhật HS | 400.000đ | ⭐⭐ |
+| Văn phòng phẩm | 300.000đ | ⭐⭐⭐ |
+| Hoạt động dã ngoại | 1.500.000đ | ⭐⭐⭐ |
+| Quỹ dự phòng | 700.000đ | ⭐⭐ |
+| **Tổng chi** | **3.500.000đ** | |
+
+> 💡 **Gợi ý:** Nên giữ quỹ dự phòng ít nhất 20% tổng thu để xử lý các tình huống phát sinh.`,
+
+  notification: `### 📢 Mẫu Thông Báo Họp Phụ Huynh
+
+---
+
+**TRƯỜNG THCS NGUYỄN KHÁNH TOÀN**  
+**Lớp 9/3 - Năm học 2025-2026**
+
+---
+
+#### THÔNG BÁO
+##### V/v: Họp phụ huynh học sinh cuối học kỳ II
+
+Kính gửi: Quý Phụ huynh học sinh lớp 9/3
+
+Ban cán sự lớp trân trọng kính mời Quý Phụ huynh tham dự buổi họp phụ huynh với nội dung sau:
+
+**🕐 Thời gian:** 14h00, Thứ Bảy, ngày 15/03/2026  
+**📍 Địa điểm:** Phòng học lớp 9/3, Tầng 2, Dãy A  
+
+**📋 Nội dung:**
+1. Báo cáo kết quả học tập HK2
+2. Định hướng ôn thi tuyển sinh lớp 10
+3. Thông qua kế hoạch hoạt động hè
+4. Thu chi quỹ lớp
+
+**Lưu ý:** Quý Phụ huynh vui lòng sắp xếp thời gian tham dự đầy đủ.
+
+> Xác nhận tham dự qua Zalo nhóm lớp trước ngày 12/03/2026.
+
+**BAN CÁN SỰ LỚP 9/3**`,
+
+  trip: `### 🏕️ Kế Hoạch Dã Ngoại Cuối Năm
+
+---
+
+#### 📍 THÔNG TIN CHUYẾN ĐI
+
+| | |
+|---|---|
+| **Địa điểm** | Khu du lịch Suối Mơ, Đồng Nai |
+| **Thời gian** | 1 ngày (Chủ nhật, 20/04/2026) |
+| **Số lượng** | 42 người (40 HS + 2 GV) |
+| **Chi phí dự kiến** | 150.000đ/người |
+
+---
+
+#### ⏰ LỊCH TRÌNH CHI TIẾT
+
+| Thời gian | Hoạt động |
+|-----------|-----------|
+| 06:00 | Tập trung tại trường, điểm danh |
+| 06:30 | Khởi hành |
+| 08:30 | Đến nơi, nhận phòng, ăn sáng nhẹ |
+| 09:30 | Team building - Trò chơi tập thể |
+| 11:30 | Nghỉ ngơi, chuẩn bị ăn trưa |
+| 12:00 | Tiệc BBQ ngoài trời 🍖 |
+| 14:00 | Tự do: Bơi lội / Đạp xe / Chụp ảnh |
+| 16:00 | Tổng kết, trao giải, chụp ảnh lưu niệm |
+| 16:30 | Khởi hành về |
+| 18:30 | Về đến trường, giải tán |
+
+---
+
+#### 📝 CHECKLIST CHUẨN BỊ
+- [ ] Đồ bơi, khăn tắm
+- [ ] Kem chống nắng, nón
+- [ ] Giày thể thao
+- [ ] Thuốc cá nhân (nếu có)
+- [ ] Tiền mặt dự phòng
+
+> ⚠️ **Lưu ý:** Tất cả học sinh phải có giấy xác nhận của phụ huynh trước ngày 15/04/2026.`
+};
+
 async function askAI(q) {
   const resBox = document.getElementById("ai-result");
   const load = document.getElementById("ai-loading");
   if (load) load.classList.remove("hidden");
+  if (resBox) resBox.innerHTML = "";
+  
   setTimeout(() => {
-    let txt =
-      "### Kết quả phân tích Gemini AI\n\nĐây là phản hồi chuyên nghiệp từ hệ thống thông minh.\n\n* **Độ chính xác:** 99%\n* **Trạng thái:** Hoàn tất\n\n> Chúc tập thể lớp có một ngày học tập thật tốt!";
-    if (resBox && typeof marked !== "undefined")
+    let txt = aiResponses[q] || aiResponses.budget;
+    if (resBox && typeof marked !== "undefined") {
       resBox.innerHTML = marked.parse(txt);
+    }
     if (load) load.classList.add("hidden");
+    
+    // Scroll to result
+    resBox?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, 1500);
 }
 

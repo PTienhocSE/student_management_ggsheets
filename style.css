@@ -17,7 +17,7 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* --- Scrollbar --- */
+/* --- Custom Scrollbar --- */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -30,6 +30,194 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--primary-blue);
+}
+
+/* Custom scrollbar cho phần thi đua học sinh */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #003a7a;
+}
+
+/* --- Emulation Tab Styles --- */
+.emulation-tab {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.emulation-tab:hover:not(.active) {
+  background: #e5e7eb !important;
+}
+.emulation-tab.active {
+  background: #003a7a !important;
+  color: white !important;
+}
+
+/* --- Media Grid (Bộ sưu tập ảnh) --- */
+#media-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 200px);
+  gap: 16px;
+}
+
+#media-grid .media-item {
+  height: 100%;
+}
+
+#media-grid .media-main {
+  grid-row: span 2;
+}
+
+@media (max-width: 768px) {
+  #media-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+  #media-grid .media-item {
+    height: 200px;
+  }
+  #media-grid .media-main {
+    grid-row: span 1;
+    height: 250px;
+  }
+}
+
+/* --- Lightbox Styles --- */
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.lightbox-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.lightbox-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 80px;
+}
+
+.lightbox-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.lightbox-content img {
+  animation: lightboxFadeIn 0.3s ease;
+}
+
+@keyframes lightboxFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  background: white/10;
+  border: none;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: rotate(90deg);
+}
+
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 60px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.lightbox-nav:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.lightbox-prev {
+  left: 20px;
+}
+
+.lightbox-next {
+  right: 20px;
+}
+
+.lightbox-info {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .lightbox-container {
+    padding: 60px 20px;
+  }
+  .lightbox-nav {
+    width: 45px;
+    height: 45px;
+  }
+  .lightbox-prev {
+    left: 10px;
+  }
+  .lightbox-next {
+    right: 10px;
+  }
 }
 
 /* --- Glassmorphism Header --- */

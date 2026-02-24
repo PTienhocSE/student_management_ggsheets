@@ -144,8 +144,8 @@
               <span class="material-symbols-outlined text-sm animate-bounce"
                 >auto_awesome</span
               >
-              <span class="text-[11px] font-black uppercase tracking-[0.2em]"
-                >Niên khóa 2024 - 2025</span
+              <span id="school-year" class="text-[11px] font-black uppercase tracking-[0.2em]"
+                >Đang tải...</span
               >
             </div>
 
@@ -673,8 +673,34 @@
               <h3 class="text-2xl font-black mb-8 uppercase tracking-tighter">
                 Bảng Điểm Thi Đua Các Tổ
               </h3>
-              <div class="space-y-6" id="emulation-list"></div>
+              <div class="space-y-6" id="emulation-groups"></div>
             </div>
+          </div>
+
+          <!-- Đường phân cách -->
+          <div class="flex items-center gap-4 my-12">
+            <div class="flex-1 h-px bg-gray-200"></div>
+            <span class="text-gray-400 font-bold text-sm uppercase tracking-wider">Chi tiết học sinh</span>
+            <div class="flex-1 h-px bg-gray-200"></div>
+          </div>
+
+          <!-- Phần Điểm Thi Đua Học Sinh -->
+          <div class="bg-gray-50 p-8 md:p-10 rounded-[50px] border border-gray-100">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+              <h3 class="text-xl font-black text-[#003a7a] flex items-center gap-2">
+                <span class="material-symbols-outlined text-amber-500">person</span>
+                ĐIỂM THI ĐUA HỌC SINH
+              </h3>
+            </div>
+            <!-- Bộ lọc và tìm kiếm -->
+            <div class="flex flex-col md:flex-row gap-4 mb-6">
+              <div class="relative flex-1">
+                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+                <input type="text" id="emulation-search" placeholder="Tìm học sinh..." oninput="filterEmulationStudents()" class="w-full pl-12 pr-4 py-3 rounded-2xl border border-gray-200 focus:border-blue-400 focus:outline-none text-sm">
+              </div>
+            </div>
+            <!-- Danh sách học sinh -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar" id="emulation-students"></div>
           </div>
         </div>
       </section>
@@ -867,7 +893,7 @@
                 <p class="font-black text-[#003a7a]">Lập kế hoạch thu chi</p>
               </button>
               <button
-                onclick="askAI('announcement')"
+                onclick="askAI('notification')"
                 class="p-8 bg-orange-50 rounded-[32px] border-2 border-transparent hover:border-orange-200 transition text-left group"
               >
                 <span
@@ -1162,8 +1188,37 @@
           Hệ thống Quản lý Lớp học
         </p>
         <p class="text-sm font-medium text-gray-500 mt-2">
-          Liên hệ: phuctran.dev@gmail.com
+          Liên hệ: minh@gmail.com
         </p>
+      </div>
+    </div>
+
+    <!-- LIGHTBOX XEM ẢNH -->
+    <div id="media-lightbox" class="lightbox-overlay" onclick="closeLightbox(event)">
+      <div class="lightbox-container">
+        <!-- Nút đóng -->
+        <button class="lightbox-close" onclick="closeLightbox(event)">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+        
+        <!-- Nút Previous -->
+        <button class="lightbox-nav lightbox-prev" onclick="event.stopPropagation(); prevLightbox()">
+          <span class="material-symbols-outlined">chevron_left</span>
+        </button>
+        
+        <!-- Nội dung ảnh -->
+        <div class="lightbox-content" id="lightbox-content"></div>
+        
+        <!-- Nút Next -->
+        <button class="lightbox-nav lightbox-next" onclick="event.stopPropagation(); nextLightbox()">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </button>
+        
+        <!-- Thông tin ảnh -->
+        <div class="lightbox-info">
+          <span id="lightbox-counter" class="text-white/70 font-bold text-sm">1 / 5</span>
+          <h4 id="lightbox-title" class="text-white font-bold text-lg mt-1">Tiêu đề ảnh</h4>
+        </div>
       </div>
     </div>
 
